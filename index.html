@@ -2,197 +2,111 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Paluwagan 🏆 Green Header</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paluwagan Palengke Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --primary: #27ae60; /* Green */
-            --dark: #2c3e50;
-            --border: #dee2e6;
-            --light-green: #2ecc71;
-        }
-
-        body { font-family: sans-serif; margin: 0; background: #f4f7f6; overflow: hidden; }
-        .header { background: var(--dark); color: white; padding: 10px; text-align: center; height: 50px; }
-        .wrapper { width: 100vw; height: calc(100vh - 70px); overflow: auto; position: relative; }
-        table { border-collapse: separate; border-spacing: 0; table-layout: fixed; }
-
-        /* STICKY TOP ROW (Dates) */
-        thead th {
-            position: sticky; top: 0; z-index: 10;
-            background: var(--dark); color: white; font-size: 11px;
-            padding: 10px 5px; border: 0.5px solid #444; width: 75px;
-        }
-
-        /* STICKY LEFT COLUMN (Member Names - NOW GREEN) */
-        td:first-child, th:first-child {
-            position: sticky; left: 0; z-index: 20;
-            background: var(--primary); /* GREEN HEADER */
-            color: white; /* White text para mabasa sa green */
-            width: 130px; min-width: 130px;
-            font-weight: bold; font-size: 12px; border-right: 2px solid #219150;
-            text-align: left; padding: 0 5px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-        }
-        
-        /* Corner Piece (Intersection of Members & Dates) */
-        thead th:first-child { z-index: 30; background: #1e8449; }
-
-        .editable-name { padding: 10px 5px; outline: none; border-radius: 4px; display: inline-block; width: 85%; }
-        .update-mode .editable-name { border: 1px dashed #fff; background: rgba(255,255,255,0.2); cursor: text; }
-
-        td { border: 0.5px solid var(--border); padding: 0; height: 55px; background: white; text-align: center; }
-
-        .cell-container { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-        .pay-btn {
-            width: 100%; height: 100%; border: none; background: transparent;
-            font-size: 9px; font-weight: bold; cursor: pointer; color: transparent;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .pay-btn.paid { background: var(--light-green) !important; color: white !important; }
-        .update-mode .pay-btn:not(.paid) { color: #ccc; }
-
-        .trophy {
-            position: absolute; font-size: 18px; pointer-events: none; z-index: 5;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
-        }
-
-        .btn-action {
-            position: fixed; bottom: 20px; right: 20px;
-            padding: 12px 20px; border-radius: 30px;
-            background: var(--dark); color: white; border: none;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 1000;
-            font-weight: bold; font-size: 14px; cursor: pointer;
-        }
-        .btn-action.active { background: var(--primary); }
+        .paid { background-color: #dcfce7; border-color: #22c55e; }
+        .unpaid { background-color: #fef2f2; border-color: #ef4444; }
     </style>
 </head>
-<body>
+<body class="bg-slate-100 min-h-screen p-4">
 
-<div class="header">
-    <b style="font-size: 14px;">🏆 Paluwagan Tracker 🏆</b><br>
-    <small id="mode-text">View Mode (Locked)</small>
-</div>
+    <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6">
+        <h1 class="text-2xl font-bold text-center text-slate-800 mb-2">Paluwagan Tracker</h1>
+        <p class="text-center text-slate-500 text-sm mb-6">Real-time Updates</p>
 
-<div class="wrapper">
-    <table id="mainTable">
-        <thead><tr id="dateHeader"><th>MEMBERS</th></tr></thead>
-        <tbody id="tableBody"></tbody>
-    </table>
-</div>
-
-<button class="btn-action" id="actionBtn" onclick="handleToggle()">🔒 LOCK</button>
-
-<script>
-    let isUpdateMode = localStorage.getItem('update_session') === 'true';
-    const DB_KEY = 'pal_grid_v10';
-    const NAME_KEY = 'pal_names_v10';
-    
-    let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-    let names = JSON.parse(localStorage.getItem(NAME_KEY)) || {};
-
-    const dates = [];
-    let d = new Date('2026-03-23');
-    const end = new Date('2026-08-29');
-    while(d <= end) {
-        dates.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-        d.setDate(d.getDate() + 1);
-    }
-
-    const trophyStartIndex = dates.indexOf("Mar 29");
-    const lastDayIndex = dates.indexOf("Aug 29");
-
-    function buildGrid() {
-        const header = document.getElementById('dateHeader');
-        const body = document.getElementById('tableBody');
-        const btn = document.getElementById('actionBtn');
+        <div id="loading" class="text-center py-10 text-slate-400 italic">Kumokonekta sa Firebase...</div>
         
-        if(isUpdateMode) {
-            document.body.classList.add('update-mode');
-            document.getElementById('mode-text').innerText = "Update Mode (On)";
-            btn.innerText = "📝 UPDATE";
-            btn.classList.add('active');
-        } else {
-            btn.innerText = "🔒 LOCK";
-        }
+        <div id="listahan" class="space-y-3 hidden">
+            </div>
 
-        dates.forEach(dateLabel => {
-            const th = document.createElement('th');
-            th.innerText = dateLabel;
-            header.appendChild(th);
+        <div class="mt-8 pt-4 border-t border-slate-100">
+            <button onclick="pindotAdmin()" class="w-full py-3 bg-slate-800 text-white rounded-xl font-medium hover:bg-slate-700 transition">
+                🔒 ADMIN LOGIN (UPDATE)
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // CONFIG MO MULA SA SCREENSHOT
+        const firebaseConfig = {
+            apiKey: "AIzaSyBbmXujvlOIUxIYi2saaQg85NUfeuM69ic",
+            authDomain: "paluwagan-palengke.firebaseapp.com",
+            databaseURL: "https://paluwagan-palengke-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "paluwagan-palengke",
+            storageBucket: "paluwagan-palengke.firebasestorage.app",
+            messagingSenderId: "248955510909",
+            appId: "1:248955510909:web:7ad1b6ec652e43312ed114",
+            measurementId: "G-6X17KNVDZ3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const membersRef = ref(db, 'members');
+
+        let modeAdmin = false;
+        let localData = [];
+
+        // LOAD DATA
+        onValue(membersRef, (snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+                // Kung wala pang laman, gawa tayo ng 23 members
+                let initial = [];
+                for(let i=1; i<=23; i++) {
+                    initial.push({ id: i, pangalan: "Member " + i, status: "UNPAID" });
+                }
+                set(membersRef, initial);
+                return;
+            }
+
+            localData = data;
+            renderList();
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('listahan').classList.remove('hidden');
         });
 
-        for(let i=0; i<23; i++) {
-            const tr = document.createElement('tr');
-            const nameTd = document.createElement('td');
-            const nameId = `member_${i}`;
-            const currentName = names[nameId] || (i === 0 ? "ADMIN" : `MEMBER ${i}`);
+        function renderList() {
+            const container = document.getElementById('listahan');
+            container.innerHTML = '';
 
-            nameTd.innerHTML = `
-                <div class="editable-name" 
-                     contenteditable="${isUpdateMode}" 
-                     onblur="saveName('${nameId}', this.innerText)">
-                    ${currentName}
-                </div>
-            `;
-            tr.appendChild(nameTd);
-
-            dates.forEach((dateLabel, dIdx) => {
-                const td = document.createElement('td');
-                const key = `${nameId}-${dateLabel}`;
-                const isPaid = db[key] === true;
+            localData.forEach((m, index) => {
+                const div = document.createElement('div');
+                div.className = `flex justify-between items-center p-4 border-2 rounded-xl transition ${m.status === 'PAID' ? 'paid' : 'unpaid'}`;
                 
-                // Trophy Logic: 
-                // Admin starts Mar 29, then every 7 days.
-                // If it's the last member (index 22) AND it's Aug 29, show trophy.
-                const isSahodDay = (dIdx === (trophyStartIndex + (i * 7))) || (i === 22 && dIdx === lastDayIndex);
-
-                const container = document.createElement('div');
-                container.className = 'cell-container';
-
-                const btnCell = document.createElement('button');
-                btnCell.className = `pay-btn ${isPaid ? 'paid' : ''}`;
-                btnCell.innerText = 'PAID';
-                btnCell.onclick = () => { if(isUpdateMode) { db[key] = !db[key]; saveData(); } };
-
-                if(isSahodDay) {
-                    const trophy = document.createElement('span');
-                    trophy.className = 'trophy';
-                    trophy.innerText = '🏆';
-                    container.appendChild(trophy);
-                }
-
-                container.appendChild(btnCell);
-                td.appendChild(container);
-                tr.appendChild(td);
+                div.innerHTML = `
+                    <div>
+                        <span class="text-xs text-slate-400 font-bold">#${m.id}</span>
+                        <div class="font-bold text-slate-700">${m.pangalan}</div>
+                    </div>
+                    ${modeAdmin ? 
+                        `<button onclick="toggleStatus(${index})" class="bg-white px-4 py-1 rounded-lg shadow-sm text-xs font-bold border">PALITAN</button>` : 
+                        `<span class="text-xs font-black ${m.status === 'PAID' ? 'text-green-600' : 'text-red-500'}">${m.status}</span>`
+                    }
+                `;
+                container.appendChild(div);
             });
-            body.appendChild(tr);
         }
-    }
 
-    function saveName(id, val) {
-        names[id] = val.trim();
-        localStorage.setItem(NAME_KEY, JSON.stringify(names));
-    }
+        window.pindotAdmin = () => {
+            const pin = prompt("Ilagay ang Admin PIN (Default: 1234):");
+            if(pin === "1234") {
+                modeAdmin = !modeAdmin;
+                renderList();
+                alert(modeAdmin ? "Update Mode: ON" : "Update Mode: OFF (View Only)");
+            } else {
+                alert("Maling PIN!");
+            }
+        };
 
-    function saveData() {
-        localStorage.setItem(DB_KEY, JSON.stringify(db));
-        location.reload();
-    }
-
-    function handleToggle() {
-        if(!isUpdateMode) {
-            if(prompt("Enter Admin PIN to switch to Update Mode:") === "1234") {
-                localStorage.setItem('update_session', 'true');
-                location.reload();
-            } else { alert("Wrong PIN!"); }
-        } else {
-            localStorage.removeItem('update_session');
-            location.reload();
-        }
-    }
-
-    buildGrid();
-</script>
+        window.toggleStatus = (idx) => {
+            localData[idx].status = localData[idx].status === "PAID" ? "UNPAID" : "PAID";
+            set(membersRef, localData);
+        };
+    </script>
 </body>
 </html>
