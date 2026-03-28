@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Paluwagan 🏆 Green Header</title>
+    <style>
+        :root {
+            --primary: #27ae60; /* Green */
+            --dark: #2c3e50;
+            --border: #dee2e6;
+            --light-green: #2ecc71;
+        }
+
+        body { font-family: sans-serif; margin: 0; background: #f4f7f6; overflow: hidden; }
+        .header { background: var(--dark); color: white; padding: 10px; text-align: center; height: 50px; }
+        .wrapper { width: 100vw; height: calc(100vh - 70px); overflow: auto; position: relative; }
+        table { border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+
+        /* STICKY TOP ROW (Dates) */
+        thead th {
+            position: sticky; top: 0; z-index: 10;
+            background: var(--dark); color: white; font-size: 11px;
+            padding: 10px 5px; border: 0.5px solid #444; width: 75px;
+        }
+
+        /* STICKY LEFT COLUMN (Member Names - NOW GREEN) */
+        td:first-child, th:first-child {
+            position: sticky; left: 0; z-index: 20;
+            background: var(--primary); /* GREEN HEADER */
+            color: white; /* White text para mabasa sa green */
+            width: 130px; min-width: 130px;
+            font-weight: bold; font-size: 12px; border-right: 2px solid #219150;
+            text-align: left; padding: 0 5px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        
+        /* Corner Piece (Intersection of Members & Dates) */
+        thead th:first-child { z-index: 30; background: #1e8449; }
+
+        .editable-name { padding: 10px 5px; outline: none; border-radius: 4px; display: inline-block; width: 85%; }
+        .update-mode .editable-name { border: 1px dashed #fff; background: rgba(255,255,255,0.2); cursor: text; }
+
+        td { border: 0.5px solid var(--border); padding: 0; height: 55px; background: white; text-align: center; }
+
+        .cell-container { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .pay-btn {
+            width: 100%; height: 100%; border: none; background: transparent;
+            font-size: 9px; font-weight: bold; cursor: pointer; color: transparent;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .pay-btn.paid { background: var(--light-green) !important; color: white !important; }
+        .update-mode .pay-btn:not(.paid) { color: #ccc; }
+
+        .trophy {
+            position: absolute; font-size: 18px; pointer-events: none; z-index: 5;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+        }
+
+        .btn-action {
+            position: fixed; bottom: 20px; right: 20px;
+            padding: 12px 20px; border-radius: 30px;
+            background: var(--dark); color: white; border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 1000;
+            font-weight: bold; font-size: 14px; cursor: pointer;
+        }
+        .btn-action.active { background: var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <b style="font-size: 14px;">🏆 Paluwagan Tracker 🏆</b><br>
+    <small id="mode-text">View Mode (Locked)</small>
+</div>
+
+<div class="wrapper">
+    <table id="mainTable">
+        <thead><tr id="dateHeader"><th>MEMBERS</th></tr></thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+</div>
+
+<button class="btn-action" id="actionBtn" onclick="handleToggle()">🔒 LOCK</button>
+
+<script>
+    let isUpdateMode = localStorage.getItem('update_session') === 'true';
+    const DB_KEY = 'pal_grid_v10';
+    const NAME_KEY = 'pal_names_v10';
+    
+    let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+    let names = JSON.parse(localStorage.getItem(NAME_KEY)) || {};
+
+    const dates = [];
+    let d = new Date('2026-03-23');
+    const end = new Date('2026-08-29');
+    while(d <= end) {
+        dates.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        d.setDate(d.getDate() + 1);
+    }
+
+    const trophyStartIndex = dates.indexOf("Mar 29");
+    const lastDayIndex = dates.indexOf("Aug 29");
+
+    function buildGrid() {
+        const header = document.getElementById('dateHeader');
+        const body = document.getElementById('tableBody');
+        const btn = document.getElementById('actionBtn');
+        
+        if(isUpdateMode) {
+            document.body.classList.add('update-mode');
+            document.getElementById('mode-text').innerText = "Update Mode (On)";
+            btn.innerText = "📝 UPDATE";
+            btn.classList.add('active');
+        } else {
+            btn.innerText = "🔒 LOCK";
+        }
+
+        dates.forEach(dateLabel => {
+            const th = document.createElement('th');
+            th.innerText = dateLabel;
+            header.appendChild(th);
+        });
+
+        for(let i=0; i<23; i++) {
+            const tr = document.createElement('tr');
+            const nameTd = document.createElement('td');
+            const nameId = `member_${i}`;
+            const currentName = names[nameId] || (i === 0 ? "ADMIN" : `MEMBER ${i}`);
+
+            nameTd.innerHTML = `
+                <div class="editable-name" 
+                     contenteditable="${isUpdateMode}" 
+                     onblur="saveName('${nameId}', this.innerText)">
+                    ${currentName}
+                </div>
+            `;
+            tr.appendChild(nameTd);
+
+            dates.forEach((dateLabel, dIdx) => {
+                const td = document.createElement('td');
+                const key = `${nameId}-${dateLabel}`;
+                const isPaid = db[key] === true;
+                
+                // Trophy Logic: 
+                // Admin starts Mar 29, then every 7 days.
+                // If it's the last member (index 22) AND it's Aug 29, show trophy.
+                const isSahodDay = (dIdx === (trophyStartIndex + (i * 7))) || (i === 22 && dIdx === lastDayIndex);
+
+                const container = document.createElement('div');
+                container.className = 'cell-container';
+
+                const btnCell = document.createElement('button');
+                btnCell.className = `pay-btn ${isPaid ? 'paid' : ''}`;
+                btnCell.innerText = 'PAID';
+                btnCell.onclick = () => { if(isUpdateMode) { db[key] = !db[key]; saveData(); } };
+
+                if(isSahodDay) {
+                    const trophy = document.createElement('span');
+                    trophy.className = 'trophy';
+                    trophy.innerText = '🏆';
+                    container.appendChild(trophy);
+                }
+
+                container.appendChild(btnCell);
+                td.appendChild(container);
+                tr.appendChild(td);
+            });
+            body.appendChild(tr);
+        }
+    }
+
+    function saveName(id, val) {
+        names[id] = val.trim();
+        localStorage.setItem(NAME_KEY, JSON.stringify(names));
+    }
+
+    function saveData() {
+        localStorage.setItem(DB_KEY, JSON.stringify(db));
+        location.reload();
+    }
+
+    function handleToggle() {
+        if(!isUpdateMode) {
+            if(prompt("Enter Admin PIN to switch to Update Mode:") === "1234") {
+                localStorage.setItem('update_session', 'true');
+                location.reload();
+            } else { alert("Wrong PIN!"); }
+        } else {
+            localStorage.removeItem('update_session');
+            location.reload();
+        }
+    }
+
+    buildGrid();
+</script>
+</body>
+</html>
