@@ -2,146 +2,193 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Paluwagan 🏆 Real-time</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Paluwagan ✧ Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #27ae60; /* Green */
-            --dark: #2c3e50;
-            --border: #dee2e6;
-            --light-green: #2ecc71;
+            --cream: #FBF8F3;
+            --panel: #FFFFFF;
+            --plum: #7D3B5B;
+            --plum-deep: #5E2C45;
+            --paid: #7BA876;
+            --unpaid: #C6614F;
+            --edge: #B9B4AC;
+            --sun: #F0D9A0;
+            --ink: #000000;
+            --ink-soft: #A39C8E;
+            --line: #EFE7D8;
+            box-sizing: border-box;
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        * { box-sizing: border-box; }
+        html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            margin: 0; background: var(--cream); overflow: hidden; color: var(--ink);
         }
 
-        body { font-family: sans-serif; margin: 0; background: #f4f7f6; overflow: hidden; }
-        .header { background: var(--dark); color: white; padding: 10px; text-align: center; height: 50px; }
-        .wrapper { width: 100vw; height: calc(100vh - 70px); overflow: auto; position: relative; }
+        .header {
+            background: linear-gradient(135deg, #FDF4EE 0%, #F6ECE0 100%);
+            padding: 11px 16px 10px; text-align: left; height: 54px;
+            border-bottom: 1px solid var(--line);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .header .title {
+            font-family: 'Outfit', sans-serif; font-weight: 700;
+            font-size: 17px; color: var(--plum-deep); letter-spacing: -.2px;
+            display: flex; align-items: baseline; gap: 6px;
+        }
+        .header .title span.mark { color: var(--sun); font-size: 15px; }
+        #mode-text { font-size: 10.5px; color: #000; display: block; margin-top: 2px; }
+
+        .wrapper { width: 100vw; height: calc(100vh - 74px); overflow: auto; position: relative; }
         table { border-collapse: separate; border-spacing: 0; table-layout: fixed; }
 
         thead th {
             position: sticky; top: 0; z-index: 10;
-            background: var(--dark); color: white; font-size: 11px;
-            padding: 10px 5px; border: 0.5px solid #444; width: 75px;
+            background: var(--cream); color: #000; font-size: 10px;
+            font-family: 'DM Sans', sans-serif; font-weight: 600;
+            padding: 9px 4px; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+            width: 72px;
         }
 
         td:first-child, th:first-child {
             position: sticky; left: 0; z-index: 20;
-            background: var(--primary); 
-            color: white; 
-            width: 130px; min-width: 130px;
-            font-weight: bold; font-size: 12px; border-right: 2px solid #219150;
-            text-align: left; padding: 0 5px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            background: var(--plum);
+            color: #000;
+            width: 132px; min-width: 132px;
+            font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13px;
+            border-right: none;
+            text-align: left; padding: 0 10px;
+            box-shadow: 3px 0 8px rgba(74,70,64,0.08);
         }
-        
-        thead th:first-child { z-index: 30; background: #1e8449; }
 
-        .editable-name { padding: 10px 5px; outline: none; border-radius: 4px; display: inline-block; width: 85%; }
-        .update-mode .editable-name { border: 1px dashed #fff; background: rgba(255,255,255,0.2); cursor: text; }
+        thead th:first-child { z-index: 30; background: var(--plum-deep); }
 
-        td { border: 0.5px solid var(--border); padding: 0; height: 55px; background: white; text-align: center; }
+        .editable-name { padding: 10px 4px; outline: none; border-radius: 8px; display: inline-block; width: 85%; }
+        .update-mode .editable-name { border: 1px dashed rgba(255,255,255,0.6); background: rgba(255,255,255,0.15); cursor: text; }
+
+        td { border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); padding: 0; height: 54px; background: var(--panel); text-align: center; }
+        tbody tr:nth-child(even) td { background: #FBF8F1; }
+        tbody tr:nth-child(even) td:first-child { background: var(--plum); }
 
         .cell-container { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
         .pay-btn {
-            width: 100%; height: 100%; border: none; background: transparent;
-            font-size: 9px; font-weight: bold; cursor: pointer; color: transparent;
+            width: 72%; height: 62%; border: 1.5px solid var(--edge); background: var(--unpaid);
+            border-radius: 999px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0; font-weight: 600; cursor: pointer; color: transparent;
             -webkit-tap-highlight-color: transparent;
+            transition: transform .12s ease;
+            opacity: .55;
         }
-        .pay-btn.paid { background: var(--light-green) !important; color: white !important; }
-        .update-mode .pay-btn:not(.paid) { color: #ccc; }
+        .update-mode .pay-btn { opacity: .8; }
+        .pay-btn.paid {
+            background: var(--paid) !important;
+            border-color: var(--edge);
+            opacity: 1;
+            box-shadow: 0 2px 6px rgba(74,70,64,0.2);
+        }
+        .pay-btn.paid::after {
+            content: '✓'; font-size: 15px; color: #fff; font-weight: 700;
+        }
+        .update-mode .pay-btn:active { transform: scale(0.9); }
 
         .trophy {
-            position: absolute; font-size: 18px; pointer-events: none; z-index: 5;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+            position: absolute; top: 1px; right: 1px; z-index: 6; pointer-events: none;
+            width: 22px; height: 22px; border-radius: 50%;
+            background: radial-gradient(circle at 32% 28%, #FFEDB0 0%, #FFC93C 45%, #E08E12 80%, #B36E08 100%);
+            border: 1px solid #8A5C06;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; line-height: 1;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.35);
+            box-shadow:
+                0 3px 5px rgba(74,70,64,0.5),
+                0 1px 0 rgba(255,255,255,0.6) inset,
+                0 -3px 4px rgba(139,92,6,0.55) inset,
+                0 1px 1px rgba(255,255,255,0.8);
+        }
+        .trophy::before {
+            content: '';
+            position: absolute; top: 2px; left: 4px;
+            width: 8px; height: 4px; border-radius: 50%;
+            background: rgba(255,255,255,0.75);
+            filter: blur(1px);
+            transform: rotate(-25deg);
         }
 
         .btn-action {
-            position: fixed; bottom: 20px; right: 20px;
-            padding: 12px 20px; border-radius: 30px;
-            background: var(--dark); color: white; border: none;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 1000;
-            font-weight: bold; font-size: 14px; cursor: pointer;
+            position: fixed; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); right: 18px;
+            padding: 12px 20px; border-radius: 999px;
+            background: var(--plum-deep); color: #fff; border: none;
+            box-shadow: 0 6px 16px rgba(94,44,69,0.4); z-index: 1000;
+            font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13px; cursor: pointer;
         }
-        .btn-action.active { background: var(--primary); }
+        .btn-action.active { background: var(--paid); color: #fff; }
+        .status-note { font-size: 10px; opacity: .7; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <b style="font-size: 14px;">🏆 Paluwagan Tracker 🏆</b><br>
-    <small id="mode-text">View Mode (Locked)</small>
+    <div>
+        <div class="title">Paluwagan <span class="mark">✧</span> Tracker</div>
+        <small id="mode-text">Loading…</small>
+    </div>
 </div>
 
 <div class="wrapper">
     <table id="mainTable">
-        <thead><tr id="dateHeader"><th>MEMBERS</th></tr></thead>
+        <thead><tr id="dateHeader"><th>Kasapi</th></tr></thead>
         <tbody id="tableBody"></tbody>
     </table>
 </div>
 
-<button class="btn-action" id="actionBtn">🔒 LOCK</button>
+<button class="btn-action" id="actionBtn">🔒 Lock</button>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyBbmXujvlOIUxIYi2saaQg85NUfeuM69ic",
-        authDomain: "paluwagan-palengke.firebaseapp.com",
-        databaseURL: "https://paluwagan-palengke-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "paluwagan-palengke",
-        storageBucket: "paluwagan-palengke.firebasestorage.app",
-        messagingSenderId: "248955510909",
-        appId: "1:248955510909:web:7ad1b6ec652e43312ed114"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const rootRef = ref(db, 'paluwagan_data');
-
+<script>
     let isUpdateMode = false;
     let remoteData = { db: {}, names: {} };
+    let db = null;
+    let docRef = null;
+    let dbReady = false;
 
     const dates = [];
-    let d = new Date('2026-03-23');
-    const end = new Date('2026-08-29');
-    while(d <= end) {
+    let d = new Date('2026-09-27');
+    const end = new Date('2026-12-27');
+    while (d <= end) {
         dates.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
         d.setDate(d.getDate() + 1);
     }
 
-    const trophyStartIndex = dates.indexOf("Mar 29");
-    const lastDayIndex = dates.indexOf("Aug 29");
+    const trophyStartIndex = dates.indexOf("Sep 27");
+    const lastDayIndex = dates.indexOf("Dec 27");
 
-    // Listen to Firebase Changes
-    onValue(rootRef, (snapshot) => {
-        const val = snapshot.val();
-        if (val) {
-            remoteData = val;
-            buildGrid();
-        } else {
-            // Initial Push if DB is empty
-            set(rootRef, { db: {}, names: {} });
-        }
-    });
+    function keyFor(nameId, dateLabel) {
+        return `${nameId}-${dateLabel}`.replace(/[.#$/[\]]/g, '_');
+    }
 
     function buildGrid() {
         const header = document.getElementById('dateHeader');
         const body = document.getElementById('tableBody');
         const btn = document.getElementById('actionBtn');
-        
-        // Reset table but keep first column header
+
         header.innerHTML = '<th>MEMBERS</th>';
         body.innerHTML = '';
 
-        if(isUpdateMode) {
+        if (isUpdateMode) {
             document.body.classList.add('update-mode');
-            document.getElementById('mode-text').innerText = "Update Mode (On)";
-            btn.innerText = "📝 UPDATE";
+            document.getElementById('mode-text').innerText = dbReady ? "Update Mode (On)" : "Update Mode (Not synced)";
+            btn.innerText = "✎ Update";
             btn.classList.add('active');
         } else {
             document.body.classList.remove('update-mode');
-            document.getElementById('mode-text').innerText = "View Mode (Locked)";
-            btn.innerText = "🔒 LOCK";
+            document.getElementById('mode-text').innerText = dbReady ? "View Mode (Locked)" : "View Mode — no sync (open in Claude to save)";
+            btn.innerText = "🔒 Lock";
             btn.classList.remove('active');
         }
 
@@ -151,25 +198,25 @@
             header.appendChild(th);
         });
 
-        for(let i=0; i<23; i++) {
+        for (let i = 0; i < 23; i++) {
             const tr = document.createElement('tr');
             const nameTd = document.createElement('td');
             const nameId = `member_${i}`;
             const currentName = remoteData.names?.[nameId] || (i === 0 ? "ADMIN" : `MEMBER ${i}`);
 
             nameTd.innerHTML = `
-                <div class="editable-name" 
-                     contenteditable="${isUpdateMode}" 
+                <div class="editable-name"
+                     contenteditable="${isUpdateMode}"
                      data-id="${nameId}">
                     ${currentName}
                 </div>
             `;
-            
-            // Save name on blur
+
             nameTd.querySelector('.editable-name').onblur = (e) => {
-                if(isUpdateMode) {
+                if (isUpdateMode) {
                     const newName = e.target.innerText.trim();
-                    update(ref(db, 'paluwagan_data/names'), { [nameId]: newName });
+                    remoteData.names[nameId] = newName;
+                    saveNames();
                 }
             };
 
@@ -177,9 +224,9 @@
 
             dates.forEach((dateLabel, dIdx) => {
                 const td = document.createElement('td');
-                const key = `${nameId}-${dateLabel}`.replace(/[.#$/[\]]/g, '_'); // Firebase key safety
+                const key = keyFor(nameId, dateLabel);
                 const isPaid = remoteData.db?.[key] === true;
-                
+
                 const isSahodDay = (dIdx === (trophyStartIndex + (i * 7))) || (i === 22 && dIdx === lastDayIndex);
 
                 const container = document.createElement('div');
@@ -187,16 +234,19 @@
 
                 const btnCell = document.createElement('button');
                 btnCell.className = `pay-btn ${isPaid ? 'paid' : ''}`;
-                btnCell.innerText = 'PAID';
-                btnCell.onclick = () => { 
-                    if(isUpdateMode) { 
-                        update(ref(db, 'paluwagan_data/db'), { [key]: !isPaid });
-                    } 
+                btnCell.innerText = 'BAYAD';
+                btnCell.onclick = () => {
+                    if (isUpdateMode) {
+                        remoteData.db[key] = !isPaid;
+                        savePaid(key, !isPaid);
+                        buildGrid();
+                    }
                 };
 
-                if(isSahodDay) {
+                if (isSahodDay) {
                     const trophy = document.createElement('span');
                     trophy.className = 'trophy';
+                    trophy.title = 'Araw ng sahod';
                     trophy.innerText = '🏆';
                     container.appendChild(trophy);
                 }
@@ -209,17 +259,65 @@
         }
     }
 
+    function saveNames() {
+        if (!dbReady || !docRef) return;
+        docRef.update({ names: remoteData.names }).catch(() => {
+            docRef.set(remoteData).catch(() => {});
+        });
+    }
+
+    function savePaid(key, value) {
+        if (!dbReady || !docRef) return;
+        const patch = {};
+        patch[`db.${key}`] = value;
+        docRef.update(patch).catch(() => {
+            docRef.set(remoteData).catch(() => {});
+        });
+    }
+
     document.getElementById('actionBtn').onclick = () => {
-        if(!isUpdateMode) {
-            if(prompt("Enter Admin PIN:") === "1234") {
+        if (!isUpdateMode) {
+            if (prompt("Enter Admin PIN:") === "admin") {
                 isUpdateMode = true;
                 buildGrid();
-            } else { alert("Wrong PIN!"); }
+            } else {
+                alert("Wrong PIN!");
+            }
         } else {
             isUpdateMode = false;
             buildGrid();
         }
     };
+
+    // Initial render so the table is visible immediately.
+    buildGrid();
+
+    // Try to connect to shared storage so all viewers stay in sync.
+    (async () => {
+        try {
+            if (!window.claude || !window.claude.use) return;
+            db = await window.claude.use("db");
+            if (!db) return;
+            docRef = db.doc("paluwagan/state");
+            docRef.onSnapshot((snap) => {
+                dbReady = true;
+                const data = snap.exists ? snap.data() : null;
+                if (data) {
+                    remoteData = { db: data.db || {}, names: data.names || {} };
+                } else {
+                    remoteData = { db: {}, names: {} };
+                    docRef.set(remoteData).catch(() => {});
+                }
+                buildGrid();
+            }, () => {
+                dbReady = false;
+                buildGrid();
+            });
+        } catch (e) {
+            dbReady = false;
+            buildGrid();
+        }
+    })();
 </script>
 </body>
 </html>
